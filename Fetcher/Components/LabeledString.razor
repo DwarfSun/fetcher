@@ -1,0 +1,29 @@
+﻿<Columns >
+    <Markup Content="@_Label" Foreground="@LabelColor" />
+
+    @if (Lazy && string.IsNullOrEmpty(Value))
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Markup Content="@Value" Foreground="@ValueColor" />
+    }
+</Columns>
+@code 
+{
+    [Parameter]
+    public bool Lazy { get; set; } = true;
+    [Parameter]
+    public string? Separator { get; set; } = string.Empty;
+    [Parameter]
+    public string? Label { get; set; }
+    [Parameter]
+    public string? Value { get; set; }
+    [Parameter]
+    public Color LabelColor { get; set; } = Color.Grey70;
+    [Parameter]
+    public Color ValueColor { get; set; } = Color.Aquamarine3;
+
+    private string _Label => $"{Label}{Separator}";
+}
