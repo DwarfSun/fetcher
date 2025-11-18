@@ -3,6 +3,7 @@ using System.CommandLine;
 using Fetcher.EventHandlers;
 using Microsoft.Extensions.Hosting;
 using Fetcher.Library;
+using System.Text;
 
 static class Program 
 {
@@ -11,6 +12,9 @@ static class Program
 
     static async Task<int> Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
+        Console.InputEncoding = Encoding.UTF8;
+        
         if (args.Length < 2)
         {
         #if DEBUG
