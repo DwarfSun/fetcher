@@ -15,7 +15,7 @@ static class Program
         {
         #if DEBUG
             args = [
-                "--url", "https://dealvieweu.blob.core.windows.net/dvnet-db-prod/PDB1-20251114_235800-dvnet-backup-full.bak",
+                "--url", "",
                 "--path", "D:\\",
                 "--threads", "8"
                 ];
