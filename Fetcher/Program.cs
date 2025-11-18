@@ -13,9 +13,19 @@ static class Program
     {
         if (args.Length < 2)
         {
+        #if DEBUG
+            args = [
+                "--url", "https://dealvieweu.blob.core.windows.net/dvnet-db-prod/PDB1-20251114_235800-dvnet-backup-full.bak",
+                "--path", "D:\\",
+                "--threads", "8"
+                ];
+        #else
             Console.WriteLine("Usage: Fetcher.exe --url <url> [--threads <num> --path <path> --key <key>]");
             return 1;
+        #endif
         }
+        //Console.Clear();
+
         Task Downloader = Task.Run(async () => 
         {
             await DownloadWithResume(args);
@@ -30,7 +40,7 @@ static class Program
 
         await Downloader.WaitAsync(CancellationToken.None);
         
-        await Task.Delay(StatusUpdates?.milliseconds ?? 5000);
+        await Task.Delay(StatusUpdates?.milliseconds ?? 1000);
 
         return 0;
     }
@@ -68,6 +78,7 @@ static class Program
         }
 
         StatusUpdates = new();
+
         AzureBlobFile = new (
             uri: new Uri(blobUri ?? throw new NullReferenceException()),
             localPath: localPath,

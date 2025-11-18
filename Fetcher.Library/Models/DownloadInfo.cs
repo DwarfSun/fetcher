@@ -9,8 +9,9 @@ public class DownloadInfo()
     public BlobProperties? BlobProperties {get; set;}
     public List<ChunkInfo> Chunks {get;set;} = [];
     public long TotalBytesDownloaded => Chunks.Sum(chunk => chunk.BytesRead);
+    public long TotalBytesSavedToDisk => Chunks.Sum(chunk => chunk.BytesOnDisk);
     public double PercentDownloaded => BlobProperties is not null ? 
-        (double)TotalBytesDownloaded / BlobProperties.ContentLength : 0;
+        (double)TotalBytesSavedToDisk / BlobProperties.ContentLength : 0;
     private readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
     public async Task SaveAsync()
     {

@@ -12,13 +12,11 @@ public class ChunkInfo(int index, string filename)
     public readonly Stopwatch Stopwatch = new();
     public long Offset {get; set;}
     public long Length {get; set;}
-    public long BytesRead {get; set;} = File.Exists(filename) ? new FileInfo(filename).Length : 0;
-    
-    public long BytesOnDisk => File.Exists(Filename) ? new FileInfo(Filename).Length : -1;
-    public long BytesRemaining => Length - BytesRead;
-    public long CurrentOffset => Offset + BytesRead;
-    public bool Complete => BytesRead == Length;
-
+    public long BytesRead {get; set;} = 0;
+    public long BytesOnDisk => File.Exists(Filename) ? new FileInfo(Filename).Length : 0;
+    public long BytesRemaining => Length - BytesOnDisk;
+    public long CurrentOffset => Offset + BytesOnDisk;
+    public bool Complete => BytesOnDisk == Length;
     public BlobDownloadOptions? BlobDownloadOptions => BytesRemaining > 0 ? new() { Range = new Azure.HttpRange(CurrentOffset, BytesRemaining)} : null;
 }
 

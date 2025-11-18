@@ -1,12 +1,12 @@
 @namespace Fetcher.Components
 @using Humanizer
 
-<Panel Title="Status" Border = "BoxBorder.Rounded" Expand="true">
+<Panel Title="Status" Border = "BoxBorder.Rounded" Expand="true" TitleColor="@Color.Blue" BorderColor="@Color.DarkBlue">
     <Rows>
         <LabeledString 
             Lazy=true Separator=":"
-            Label="@nameof(AverageDownloadSpeed).Humanize()"
-            Value="@AverageDownloadSpeed" />
+            Label="@nameof(DownloadDuration).Humanize()"
+            Value="@DownloadDuration" />
 
         <LabeledString 
             Lazy=true Separator=":"
@@ -15,14 +15,26 @@
 
         <LabeledString 
             Lazy=true Separator=":"
+            Label="@nameof(AverageDownloadSpeed).Humanize()"
+            Value="@AverageDownloadSpeed" />
+
+        <LabeledString 
+            Lazy=true Separator=":"
             Label="@nameof(PercentDownloaded).Humanize()"
             Value="@PercentDownloaded" />
+        
+        <LabeledString 
+            Lazy=true Separator=":"
+            Label="@nameof(TotalSavedToDisk).Humanize()"
+            Value="@TotalSavedToDisk" />
     </Rows>
 </Panel>
 
 @code {
-    public string AverageDownloadSpeed = string.Empty;
+    public string DownloadDuration = string.Empty;
     public string TotalBytesDownloaded = string.Empty;
+    public string AverageDownloadSpeed = string.Empty;
+    public string TotalSavedToDisk = string.Empty;
     public string PercentDownloaded = string.Empty;
 
 
@@ -34,9 +46,11 @@
 
     private void OnStatusUpdated(object? sender, EventArgs e)
     {
-        AverageDownloadSpeed = Program.AzureBlobFile?.AverageDownloadSpeed ?? "Error";
+        DownloadDuration = Program.AzureBlobFile?.TotalDownloadTime ?? "Error";
         TotalBytesDownloaded = Program.AzureBlobFile?.TotalBytesDownloaded ?? "Error";
+        AverageDownloadSpeed = Program.AzureBlobFile?.AverageDownloadSpeed ?? "Error";
         PercentDownloaded = Program.AzureBlobFile?.PercentDownloaded ?? "Error";
+        TotalSavedToDisk = Program.AzureBlobFile?.TotalBytesOnDisk ?? "Error";
         StateHasChanged();
     }
 

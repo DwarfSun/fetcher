@@ -11,7 +11,7 @@ public class Ticker
         Ticked?.Invoke(this, e ?? EventArgs.Empty);
     }
 
-    public Ticker(int milliseconds = 5000, CancellationToken? token = null)
+    public Ticker(int milliseconds = 1000, CancellationToken? token = null)
     {
         cancellationToken = token ?? CancellationToken.None;
         this.milliseconds = milliseconds;

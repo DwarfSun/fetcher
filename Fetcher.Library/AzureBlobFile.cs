@@ -22,11 +22,13 @@ public class AzureBlobFile(
     readonly Stopwatch TimeAssembly = new();
     readonly Stopwatch TimeValidation = new();
 
+    public string TotalDownloadTime => $"{TimeDownload.Elapsed:hh\\:mm\\:ss}";
     public string TotalBytesDownloaded => $"{Format.ByteUnits(DownloadInfo.TotalBytesDownloaded)}";
     public string AverageDownloadSpeed => TimeDownload.Elapsed.Seconds > 0 
         ? $"{Format.ByteUnits(DownloadInfo.TotalBytesDownloaded / TimeDownload.Elapsed.Seconds)}/s"
         : string.Empty;
     public string PercentDownloaded => $"{DownloadInfo.PercentDownloaded * 100 :N0} %";
+    public string TotalBytesOnDisk => $"{Format.ByteUnits(DownloadInfo.TotalBytesSavedToDisk)}";
     
     private static readonly Random random = new();
     protected const int ChunkSize = 64 * 1024 * 1024; // 64 MB per chunk (67108864 bytes)
@@ -129,7 +131,7 @@ public class AzureBlobFile(
             Length = Math.Min(ChunkSize, Blob.Properties.ContentLength - offset)
         };
         
-        chunkInfo.BytesRead = chunkInfo.FileInfo.Exists ? chunkInfo.FileInfo.Length : 0;
+        //chunkInfo.BytesRead = chunkInfo.FileInfo.Exists ? chunkInfo.FileInfo.Length : 0;
 
         DownloadInfo.Chunks.Add(chunkInfo);
     }
