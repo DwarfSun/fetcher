@@ -87,7 +87,13 @@ static class Program
             writeDebugJson: debugLogEnabled
         );
 
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            Woke.PreventSleep();
+
         await AzureBlobFile.DownloadAsync();
+
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            Woke.ResumeSleepHabits();
     }
 }
 
