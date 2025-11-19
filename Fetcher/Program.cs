@@ -30,7 +30,6 @@ static class Program
             return 1;
         #endif
         }
-        //Console.Clear();
 
         Task Downloader = Task.Run(async () => 
         {
@@ -102,15 +101,25 @@ static class Program
         }
         catch (Exception e)
         {
+            string path = Path.Combine(Environment.CurrentDirectory, "Error", $"{DateTime.Now : yyyyMMddHHmm}", ".log");
+            
+            System.Console.Error.WriteLine($"Writing error details to {path}");
+            
             await File.WriteAllTextAsync(
-                Path.Combine(Environment.CurrentDirectory, "Error", $"{DateTime.Now : yyyyMMddHHmm}", ".log"),
-                JsonSerializer.Serialize(e, Global.JsonSerializerOptions));
+                path,
+                ConvertExceptionToString(e));
         }
         finally
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 Woke.ResumeSleepHabits();
         }
+    }
+
+    static string ConvertExceptionToString(Exception? e)
+    {
+        if (e is null) return "";
+        return $"{e.GetType().FullName}\n{e.Message}\n{e.Source}\n{e.StackTrace}\n\n{ConvertExceptionToString(e.InnerException)}";
     }
 }
 
