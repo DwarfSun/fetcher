@@ -77,13 +77,13 @@ public class AzureBlobFile(
 
         CheckLocalFile();
 
-        int totalChunks = (int)Math.Ceiling((double)Blob.Properties.ContentLength / ChunkSize);
+        long totalChunks = (long)Math.Ceiling((double)Blob.Properties.ContentLength / ChunkSize);
 
         List<Task> tasks = [];
         var throttler = new SemaphoreSlim(Threads);
 
         TimeDownload.Start();
-        for (int i = 0; i < totalChunks; i++)
+        for (long i = 0; i < totalChunks; i++)
             PrepareChunkInfo(i);
 
         if(_WriteDebugJson) await DownloadInfo.SaveAsync();
@@ -120,7 +120,7 @@ public class AzureBlobFile(
         TimeProcess.Stop();
     }
 
-    private void PrepareChunkInfo(int index)
+    private void PrepareChunkInfo(long index)
     {
         var offset = index * ChunkSize;
         ChunkInfo chunkInfo = new(index, $"{Filename}.{index:X4}")
@@ -145,18 +145,10 @@ public class AzureBlobFile(
         byte[] buffer = new byte[65536];
         int bytesRead;
 
-        Azure.Response<BlobDownloadStreamingResult>? downloadResponse;
-        try 
-        {
-            downloadResponse = await Blob.Client.DownloadStreamingAsync(
+        //  Azure.Response<BlobDownloadStreamingResult>? 
+        var downloadResponse = await Blob.Client.DownloadStreamingAsync(
                 options: chunk.BlobDownloadOptions);
-        }
-        catch (Exception e)
-        {
-            throw new Exception(
-                $"{JsonSerializer.Serialize(chunk, Global.JsonSerializerOptions)}"
-                , innerException: e);
-        }
+
         using var blobStream = downloadResponse.Value.Content;
         using var fileStream = new FileStream(chunk.Filename,
             FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write);

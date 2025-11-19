@@ -101,7 +101,7 @@ static class Program
         }
         catch (Exception e)
         {
-            string path = Path.Combine(Environment.CurrentDirectory, "Error", $"{DateTime.Now : yyyyMMddHHmm}", ".log");
+            string path = Path.Combine(Environment.CurrentDirectory, $"fetcher-error-{DateTime.Now :yyyyMMddHHmm}.log");
             
             System.Console.Error.WriteLine($"Writing error details to {path}");
             
@@ -119,7 +119,7 @@ static class Program
     static string ConvertExceptionToString(Exception? e)
     {
         if (e is null) return "";
-        return $"{e.GetType().FullName}\n{e.Message}\n{e.Source}\n{e.StackTrace}\n\n{ConvertExceptionToString(e.InnerException)}";
+        return $"Exception Type:\t{e.GetType().FullName}\nException Message:\t{e.Message}\nException Source:\t{e.Source}\nException Data:{JsonSerializer.Serialize(e.Data, Global.JsonSerializerOptions)}\nStackTrace:\n{e.StackTrace}\n\nInner Exception: {{\n{ConvertExceptionToString(e.InnerException)}\n}}";
     }
 }
 

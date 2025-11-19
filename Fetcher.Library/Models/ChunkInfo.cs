@@ -4,9 +4,9 @@ using Azure.Storage.Blobs.Models;
 
 namespace Fetcher.Library.Models;
 [Serializable]
-public class ChunkInfo(int index, string filename)
+public class ChunkInfo(long index, string filename)
 {
-    public int Index {get; set;} = index;
+    public long Index {get; set;} = index;
     public string Filename {get; set;} = filename;
     public FileInfo FileInfo = new(filename);
     public readonly Stopwatch Stopwatch = new();
@@ -17,9 +17,34 @@ public class ChunkInfo(int index, string filename)
     public long BytesRemaining => Math.Max(Length - BytesOnDisk, 0);
     public long CurrentOffset => Offset + BytesOnDisk;
     public bool Complete => BytesOnDisk == Length;
-    public BlobDownloadOptions? BlobDownloadOptions => BytesRemaining > 0 
-        ? new() { Range = new Azure.HttpRange(CurrentOffset, BytesRemaining)} 
-        : null;
+    public BlobDownloadOptions? BlobDownloadOptions 
+    {
+        get 
+        {
+            if (BytesRemaining < 1) return null;
+            try 
+            {
+                return new() { Range = new Azure.HttpRange(CurrentOffset, BytesRemaining)};
+            }
+            catch (Exception e)
+            {
+                throw new Exception(
+@$"{{
+    ""{nameof(Index)}"":""{Index}"",
+    ""{nameof(Filename)}"":""{Filename}"",
+    ""{nameof(Offset)}"":""{Offset}"",
+    ""{nameof(Length)}"":""{Length}"",
+    ""{nameof(BytesRead)}"":""{BytesRead}"",
+    ""{nameof(BytesOnDisk)}"":""{BytesOnDisk}"",
+    ""{nameof(BytesRemaining)}"":""{BytesRemaining}"",
+    ""{nameof(CurrentOffset)}"":""{CurrentOffset}"",
+    ""{nameof(Complete)}"":""{Complete}""
+}}
+"
+                    , innerException: e);
+            }
+        }
+    }
 }
 
 
