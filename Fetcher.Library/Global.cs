@@ -1,7 +1,5 @@
-global using RazorConsole.Core;
 global using System.Text.Json;
 
-namespace Fetcher;
 public static class Global
 {
     public static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };

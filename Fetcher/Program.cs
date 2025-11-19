@@ -4,6 +4,8 @@ using Fetcher.EventHandlers;
 using Microsoft.Extensions.Hosting;
 using Fetcher.Library;
 using System.Text;
+using System.Text.Json;
+using Fetcher;
 
 static class Program 
 {
@@ -54,7 +56,7 @@ static class Program
         string? blobUri = null;
         string? localPath = null;
         string? accountKey = null;
-        int threads = 2;
+        int threads = Environment.ProcessorCount * 32;
         bool debugLogEnabled = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -91,13 +93,24 @@ static class Program
             writeDebugJson: debugLogEnabled
         );
 
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            Woke.PreventSleep();
+        try 
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                Woke.PreventSleep();
 
-        await AzureBlobFile.DownloadAsync();
-
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            Woke.ResumeSleepHabits();
+            await AzureBlobFile.DownloadAsync();
+        }
+        catch (Exception e)
+        {
+            await File.WriteAllTextAsync(
+                Path.Combine(Environment.CurrentDirectory, "Error", $"{DateTime.Now : yyyyMMddHHmm}", ".log"),
+                JsonSerializer.Serialize(e, Global.JsonSerializerOptions));
+        }
+        finally
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                Woke.ResumeSleepHabits();
+        }
     }
 }
 

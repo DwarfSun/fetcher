@@ -14,10 +14,12 @@ public class ChunkInfo(int index, string filename)
     public long Length {get; set;}
     public long BytesRead {get; set;} = 0;
     public long BytesOnDisk => File.Exists(Filename) ? new FileInfo(Filename).Length : 0;
-    public long BytesRemaining => Length - BytesOnDisk;
+    public long BytesRemaining => Math.Max(Length - BytesOnDisk, 0);
     public long CurrentOffset => Offset + BytesOnDisk;
     public bool Complete => BytesOnDisk == Length;
-    public BlobDownloadOptions? BlobDownloadOptions => BytesRemaining > 0 ? new() { Range = new Azure.HttpRange(CurrentOffset, BytesRemaining)} : null;
+    public BlobDownloadOptions? BlobDownloadOptions => BytesRemaining > 0 
+        ? new() { Range = new Azure.HttpRange(CurrentOffset, BytesRemaining)} 
+        : null;
 }
 
 

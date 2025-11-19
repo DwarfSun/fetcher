@@ -29,8 +29,6 @@ public class AzureBlobFile(
         : string.Empty;
     public string PercentDownloaded => $"{DownloadInfo.PercentDownloaded * 100 :N0} %";
     public string TotalBytesOnDisk => $"{Format.ByteUnits(DownloadInfo.TotalBytesSavedToDisk)}";
-    
-    private static readonly Random random = new();
     protected const int ChunkSize = 64 * 1024 * 1024; // 64 MB per chunk (67108864 bytes)
 
     protected readonly Uri? Uri
@@ -147,9 +145,18 @@ public class AzureBlobFile(
         byte[] buffer = new byte[65536];
         int bytesRead;
 
-        var downloadResponse = await Blob.Client.DownloadStreamingAsync(
-            options: chunk.BlobDownloadOptions);
-        
+        Azure.Response<BlobDownloadStreamingResult>? downloadResponse;
+        try 
+        {
+            downloadResponse = await Blob.Client.DownloadStreamingAsync(
+                options: chunk.BlobDownloadOptions);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(
+                $"{JsonSerializer.Serialize(chunk, Global.JsonSerializerOptions)}"
+                , innerException: e);
+        }
         using var blobStream = downloadResponse.Value.Content;
         using var fileStream = new FileStream(chunk.Filename,
             FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write);

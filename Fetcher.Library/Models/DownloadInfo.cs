@@ -12,13 +12,12 @@ public class DownloadInfo()
     public long TotalBytesSavedToDisk => Chunks.Sum(chunk => chunk.BytesOnDisk);
     public double PercentDownloaded => BlobProperties is not null ? 
         (double)TotalBytesSavedToDisk / BlobProperties.ContentLength : 0;
-    private readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
     public async Task SaveAsync()
     {
         try 
         {
             await File.WriteAllTextAsync($"{Directory.GetCurrentDirectory()}/Download-{Id}.json"
-                , JsonSerializer.Serialize(this, JsonSerializerOptions));
+                , JsonSerializer.Serialize(this, Global.JsonSerializerOptions));
         }
         catch (System.IO.IOException) {}
     }
@@ -27,7 +26,7 @@ public class DownloadInfo()
         try 
         {
             File.WriteAllText($"{Directory.GetCurrentDirectory()}/Download-{Id}.json"
-                , JsonSerializer.Serialize(this, JsonSerializerOptions));
+                , JsonSerializer.Serialize(this, Global.JsonSerializerOptions));
         }
         catch (System.IO.IOException){}
     }
