@@ -23,4 +23,4 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish Fetcher/Fetcher.csproj --no-restore --runtime win-x64 --configuration Release --self-contained true -p:PublishSingleFile=true
+      run: dotnet publish Fetcher/Fetcher.csproj --runtime win-x64 --configuration Release --self-contained true -p:PublishSingleFile=true
