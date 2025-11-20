@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish Fetcher\Fetcher.csproj --runtime win-x64 --configuration Release --self-contained true -p:PublishSingleFile=true
+      run: dotnet publish Fetcher/Fetcher.csproj --runtime win-x64 --configuration Release --self-contained true -p:PublishSingleFile=true
