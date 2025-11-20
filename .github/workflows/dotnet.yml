@@ -26,9 +26,9 @@ jobs:
       run: dotnet restore
     - name: Publish
       run: dotnet publish Fetcher/Fetcher.csproj --runtime win-x64 --configuration Release --self-contained true -p:PublishSingleFile=true
-    - name: Create Release
+    - name: Create a Release in a GitHub Action
       id: create_release
-      uses: comnoco/create-release@v2
+      uses: comnoco/create-release-action@v2.0.5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
