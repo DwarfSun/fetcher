@@ -11,7 +11,7 @@ public class AzureBlobFile(
     dynamic uri,
     string? localPath = null, 
     string? accountKey = null, 
-    int threads = 1,
+    int threads = 512,
     bool writeDebugJson = false)
 {
 
@@ -27,7 +27,7 @@ public class AzureBlobFile(
     public string AverageDownloadSpeed => TimeDownload.Elapsed.Seconds > 0 
         ? $"{Format.ByteUnits(DownloadInfo.TotalBytesDownloaded / TimeDownload.Elapsed.Seconds)}/s"
         : string.Empty;
-    public string PercentDownloaded => $"{DownloadInfo.PercentDownloaded * 100 :N0} %";
+    public string PercentDownloaded => $"{DownloadInfo.PercentDownloaded * 100 :N2} %";
     public string TotalBytesOnDisk => $"{Format.ByteUnits(DownloadInfo.TotalBytesSavedToDisk)}";
     protected const int ChunkSize = 64 * 1024 * 1024; // 64 MB per chunk (67108864 bytes)
 
@@ -123,7 +123,7 @@ public class AzureBlobFile(
     private void PrepareChunkInfo(long index)
     {
         var offset = index * ChunkSize;
-        ChunkInfo chunkInfo = new(index, $"{Filename}.{index:X4}")
+        ChunkInfo chunkInfo = new(index, $"{Filename}.{index:D6}")
         {
             Offset = offset,
             Length = Math.Min(ChunkSize, Blob.Properties.ContentLength - offset)
