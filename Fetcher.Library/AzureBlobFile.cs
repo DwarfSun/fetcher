@@ -12,6 +12,7 @@ public class AzureBlobFile(
     string? localPath = null, 
     string? accountKey = null, 
     int threads = 512,
+    int chunkSizeMB = 256,
     bool writeDebugJson = false)
 {
 
@@ -29,7 +30,7 @@ public class AzureBlobFile(
         : string.Empty;
     public string PercentDownloaded => $"{DownloadInfo.PercentDownloaded * 100 :N2} %";
     public string TotalBytesOnDisk => $"{Format.ByteUnits(DownloadInfo.TotalBytesSavedToDisk)}";
-    protected const int ChunkSize = 64 * 1024 * 1024; // 64 MB per chunk (67108864 bytes)
+    protected readonly int ChunkSize = chunkSizeMB * 1024 * 1024;
 
     protected readonly Uri? Uri
         = uri is Uri ? uri as Uri
@@ -54,6 +55,17 @@ public class AzureBlobFile(
             return LocalPath;
         }
     }
+    private readonly BlobClientOptions BlobClientOptions = new() 
+    {
+        Retry = 
+        {
+            MaxRetries = 10,
+            NetworkTimeout = TimeSpan.FromMinutes(5), // Increase from default 100 seconds
+            Delay = TimeSpan.FromSeconds(2),
+            MaxDelay = TimeSpan.FromSeconds(30),
+            Mode = Azure.Core.RetryMode.Exponential
+        }
+    };
     private BlobClient? _BlobClient;
     protected (BlobClient Client, BlobProperties Properties) Blob 
     { 
@@ -62,8 +74,9 @@ public class AzureBlobFile(
             _BlobClient ??= !string.IsNullOrEmpty(AzureAccountKey) 
                 ? new (Uri, 
                     new Azure.Storage.StorageSharedKeyCredential(
-                        Uri?.Host.Split('.')[0], AzureAccountKey))
-                : new (Uri, new DefaultAzureCredential());
+                        Uri?.Host.Split('.')[0], AzureAccountKey),
+                    BlobClientOptions)
+                : new (Uri, new DefaultAzureCredential(), BlobClientOptions);
 
             DownloadInfo.BlobProperties ??= _BlobClient.GetProperties();
 
@@ -87,8 +100,10 @@ public class AzureBlobFile(
             PrepareChunkInfo(i);
 
         if(_WriteDebugJson) await DownloadInfo.SaveAsync();
-        
-        foreach(var chunk in DownloadInfo.Chunks)
+
+        var exceptions = new List<Exception>();
+
+        foreach(var chunk in DownloadInfo.Chunks.Where(c => !c.Complete))
         {   
             await throttler.WaitAsync();
 
@@ -96,7 +111,12 @@ public class AzureBlobFile(
             {
                 try
                 {
-                    await DownloadChunkAsync(chunk);
+                    while (!chunk.Complete)
+                        await DownloadChunkAsync(chunk);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
                 }
                 finally
                 {
@@ -106,6 +126,10 @@ public class AzureBlobFile(
             }));
         }
         await Task.WhenAll(tasks);
+
+        if (exceptions.Count > 0)
+            throw new AggregateException($"There were {exceptions.Count} exceptions whlie downloading chunks.", exceptions);
+
         if(_WriteDebugJson) await DownloadInfo.SaveAsync();
         TimeDownload.Stop();
 
@@ -171,6 +195,12 @@ public class AzureBlobFile(
         object lockfile = new();
 
         using var FileStream = new FileStream(Filename, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write);
+        FileStream.SetLength(Blob.Properties.ContentLength);
+        /*
+        for (int i = 0; i < DownloadInfo.Chunks.Count; i++)
+        {
+            var chunk = DownloadInfo.Chunks[i];
+        */
         foreach (var chunk in DownloadInfo.Chunks)
         {
             await throttler.WaitAsync();
@@ -180,7 +210,6 @@ public class AzureBlobFile(
                 try 
                 {
                     using var ChunkStream = new FileStream(chunk.Filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-
                     
                     byte[] buffer = new byte[65536];
                     int read = 0;
@@ -221,7 +250,7 @@ public class AzureBlobFile(
         byte[] md5Hash = await Validate.GetFileMD5Async(Filename);
         if (!Compare.ByteArraysEqual(Blob.Properties.ContentHash, md5Hash))
         {
-            throw new Md5HashMismatchException(Blob.Properties.ContentHash, md5Hash);
+            throw new Md5HashMismatchException(Blob.Properties.ContentHash, md5Hash, $"{Blob.Properties.ContentHash} != {md5Hash}");
         }
         return true;
     }
