@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -101,7 +102,7 @@ public class AzureBlobFile(
 
         if(_WriteDebugJson) await DownloadInfo.SaveAsync();
 
-        var exceptions = new List<Exception>();
+        var exceptions = new ConcurrentBag<Exception>();
 
         foreach(var chunk in DownloadInfo.Chunks.Where(c => !c.Complete))
         {   
@@ -128,7 +129,7 @@ public class AzureBlobFile(
         await Task.WhenAll(tasks);
 
         if (exceptions.Count > 0)
-            throw new AggregateException($"There were {exceptions.Count} exceptions whlie downloading chunks.", exceptions);
+            throw new AggregateException($"There were {exceptions.Count} exceptions while downloading chunks.", exceptions);
 
         if(_WriteDebugJson) await DownloadInfo.SaveAsync();
         TimeDownload.Stop();
@@ -250,7 +251,10 @@ public class AzureBlobFile(
         byte[] md5Hash = await Validate.GetFileMD5Async(Filename);
         if (!Compare.ByteArraysEqual(Blob.Properties.ContentHash, md5Hash))
         {
-            throw new Md5HashMismatchException(Blob.Properties.ContentHash, md5Hash, $"{Blob.Properties.ContentHash} != {md5Hash}");
+            throw new Md5HashMismatchException(
+                Blob.Properties.ContentHash, 
+                md5Hash, 
+                $"{BitConverter.ToString(Blob.Properties.ContentHash)} != {BitConverter.ToString(md5Hash)}");
         }
         return true;
     }
