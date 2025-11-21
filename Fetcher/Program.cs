@@ -56,6 +56,7 @@ static class Program
         string? localPath = null;
         string? accountKey = null;
         int threads = Environment.ProcessorCount * 32;
+        int chunksize = 256;
         bool debugLogEnabled = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -63,23 +64,26 @@ static class Program
             if (args[i].ToLowerInvariant().Equals("--debug")) 
                 debugLogEnabled = true;
             else if (i < args.Length - 1)
-            switch (args[i].ToLowerInvariant())
-            {
-                case "--url":
-                    blobUri = args[++i];
-                    break;
-                case "--path":
-                    localPath = args[++i];
-                    break;
-                case "--key":
-                    accountKey = args[++i];
-                    break;
-                case "--threads":
-                    _ = int.TryParse(args[++i], out threads);
-                    break;
-                default:
-                    break;
-            }
+                switch (args[i].ToLowerInvariant())
+                {
+                    case "--url":
+                        blobUri = args[++i];
+                        break;
+                    case "--path":
+                        localPath = args[++i];
+                        break;
+                    case "--key":
+                        accountKey = args[++i];
+                        break;
+                    case "--threads":
+                        _ = int.TryParse(args[++i], out threads);
+                        break;
+                    case "--chunksize":
+                        _ = int.TryParse(args[++i], out chunksize);
+                        break;
+                    default:
+                        break;
+                }
         }
 
         StatusUpdates = new();
@@ -89,6 +93,7 @@ static class Program
             localPath: localPath,
             accountKey: accountKey,
             threads: threads,
+            chunkSizeMB: chunksize,
             writeDebugJson: debugLogEnabled
         );
 

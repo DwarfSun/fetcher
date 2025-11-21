@@ -13,12 +13,29 @@ internal partial class Woke
     public static void PreventSleep()
     {
         // Prevent sleep
-        _ = SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
+        var state = SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED);// | ES_AWAYMODE_REQUIRED);
+        if (state == 0) System.Console.WriteLine("Unable to override power management settings.");
+
+        /*  Suggested by AI as possible solution to System.Net.Sockets.SocketException
+        // Also disable network adapter power management programmatically
+        try 
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "powercfg",
+                Arguments = "/change standby-timeout-ac 0",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+        }
+        catch { }
+        */
     }
 
 
     public static void ResumeSleepHabits()
     {
-        _ = SetThreadExecutionState(ES_CONTINUOUS);
+        var state = SetThreadExecutionState(ES_CONTINUOUS);
+        if (state == 0) System.Console.WriteLine("Unable to restore power management settings.");
     }
 }
